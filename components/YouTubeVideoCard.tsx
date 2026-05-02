@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, memo } from 'react';
 import { Play, MoreVertical, Clock, Eye } from 'lucide-react';
 import { VideoMetadata, updateVideo } from '@/lib/indexeddb';
 
@@ -10,10 +10,11 @@ interface YouTubeVideoCardProps {
   onDelete?: (videoId: string, e: React.MouseEvent) => void;
 }
 
-export default function YouTubeVideoCard({ video, onSelect, onDelete }: YouTubeVideoCardProps) {
+function YouTubeVideoCard({ video, onSelect, onDelete }: YouTubeVideoCardProps) {
   const [showMenu, setShowMenu] = useState(false);
   const [dynamicThumbnail, setDynamicThumbnail] = useState<string | null>(video.thumbnail || null);
   const [dynamicDuration, setDynamicDuration] = useState<number>(video.duration || 0);
+  const fakeViewsRef = useRef(Math.floor(Math.random() * 10000));
 
   useEffect(() => {
     if (!video.thumbnail && video.blob) {
@@ -71,10 +72,7 @@ export default function YouTubeVideoCard({ video, onSelect, onDelete }: YouTubeV
     return `${minutes}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const formatViews = () => {
-    // This is a placeholder - in a real app you'd track actual views
-    return Math.floor(Math.random() * 10000) + ' views';
-  };
+  const formatViews = () => `${fakeViewsRef.current.toLocaleString()} views`;
 
   const formatTimeAgo = (date: Date) => {
     const now = new Date();
@@ -110,6 +108,16 @@ export default function YouTubeVideoCard({ video, onSelect, onDelete }: YouTubeV
           </div>
         )}
         
+        {/* Watch Progress Bar */}
+        {video.lastPosition && dynamicDuration > 0 && video.lastPosition > 0 && (
+          <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/25">
+            <div
+              className="h-full bg-[#FF0000]"
+              style={{ width: `${Math.min(100, (video.lastPosition / dynamicDuration) * 100)}%` }}
+            />
+          </div>
+        )}
+
         {/* Duration Badge */}
         <div className="absolute bottom-2 right-2 bg-black/80 text-white text-xs px-1.5 py-0.5 rounded">
           {formatDuration(dynamicDuration)}
@@ -180,3 +188,5 @@ export default function YouTubeVideoCard({ video, onSelect, onDelete }: YouTubeV
     </div>
   );
 }
+
+export default memo(YouTubeVideoCard);

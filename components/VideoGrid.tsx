@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Play, MoreVertical, Trash2, Users, Clock } from 'lucide-react';
 import YouTubeVideoCard from './YouTubeVideoCard';
 import { getVideos, getFolders, deleteVideo, VideoMetadata, Folder } from '@/lib/indexeddb';
@@ -65,29 +65,14 @@ export default function VideoGrid({ onVideoSelect, refreshTrigger }: VideoGridPr
     setSelectedFolderId(folderId);
   };
 
-  const handleVideoSelectClick = (video: VideoMetadata) => {
+  const handleVideoSelectClick = useCallback((video: VideoMetadata) => {
     if (onVideoSelect) {
       onVideoSelect(video);
     } else {
       router.push(`/video/${video.id}`);
     }
-  };
+  }, [onVideoSelect, router]);
 
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  };
-
-  const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    }).format(new Date(date));
-  };
 
   if (loading) {
     return (

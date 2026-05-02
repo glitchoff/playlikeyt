@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { BookmarkPlus, Clock, Trash2 } from 'lucide-react';
 import { getVideos, VideoMetadata, updateVideo, Bookmark } from '@/lib/indexeddb';
 import Player, { SeekBus } from './Player';
@@ -50,6 +50,10 @@ function SidebarThumbnail({ video }: { video: VideoMetadata }) {
     }
   }, [video]);
 
+  const progressPct = video.lastPosition && duration > 0
+    ? Math.min(100, (video.lastPosition / duration) * 100)
+    : 0;
+
   return (
     <div className="w-[120px] flex-shrink-0 relative rounded-lg overflow-hidden">
       {thumb ? (
@@ -57,6 +61,12 @@ function SidebarThumbnail({ video }: { video: VideoMetadata }) {
       ) : (
         <div className="w-full h-[68px] bg-gray-300 dark:bg-[#272727] flex items-center justify-center">
           <span className="text-gray-500 dark:text-gray-400 text-[10px]">No Thumb</span>
+        </div>
+      )}
+      {/* Watch Progress Bar */}
+      {progressPct > 0 && (
+        <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/25">
+          <div className="h-full bg-[#FF0000]" style={{ width: `${progressPct}%` }} />
         </div>
       )}
       <div className="absolute bottom-1 right-1 bg-black/80 text-white text-[10px] px-1 rounded font-medium">
@@ -85,9 +95,8 @@ export default function YouTubePlayerView({ video, onVideoSelect, createVideoUrl
     });
   }, [video.id, video.folderId]);
 
-  const formatViews = () => {
-    return Math.floor(Math.random() * 1000000) + ' Views';
-  };
+  const fakeViewsRef = useRef(Math.floor(Math.random() * 1000000));
+  const formatViews = () => `${fakeViewsRef.current.toLocaleString()} Views`;
 
   const formatDate = (date: Date) => {
     return new Intl.DateTimeFormat('en-US', {

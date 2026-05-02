@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { SettingsProvider } from "@/lib/SettingsContext";
@@ -18,8 +18,6 @@ export const metadata: Metadata = {
   description: "A modern, high-fidelity YouTube-clone interface for managing and playing your local video collection with advanced controls and persistent progress.",
   keywords: ["video player", "youtube clone", "local video manager", "next.js", "indexeddb", "opfs"],
   authors: [{ name: "glitchoff" }],
-  viewport: "width=device-width, initial-scale=1, maximum-scale=1",
-  themeColor: "#0f0f0f",
   openGraph: {
     title: "PlayLikeYT - High Performance Local Video Player",
     description: "A modern, high-fidelity YouTube-clone interface for managing and playing your local video collection.",
@@ -31,6 +29,13 @@ export const metadata: Metadata = {
     title: "PlayLikeYT",
     description: "Native YouTube-like experience for local videos.",
   },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  themeColor: "#0f0f0f",
 };
 
 export default function RootLayout({
