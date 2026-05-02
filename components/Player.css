@@ -47,15 +47,50 @@
 .ms-stats { position:absolute; right:12px; bottom:72px; z-index:40; background: rgba(18,18,18,0.88); border:1px solid rgba(255,255,255,0.04); padding:10px; border-radius:8px; min-width:180px; color:#eaeaea; font-size:13px; box-shadow: 0 8px 24px rgba(0,0,0,0.6); }
 
 /* small responsive niceties */
+/* small responsive niceties */
 @media (max-width: 640px) {
-  .ms-range { width:60px; }
-  .ms-timeline { margin: 0 4px; padding: 8px 0; }
-  .ms-btn { padding: 6px; }
-  .ms-btn.small { display: none; } /* Hide -10s / +10s text buttons on mobile */
-  .ms-time { font-size: 11px; }
-  .ms-controls { flex-wrap: wrap; gap: 8px; }
-  .ms-controls-left, .ms-controls-right { gap: 6px; }
-  .ms-bottom-bar { bottom: 8px; left: 8px; right: 8px; }
+  /* Hide volume slider on mobile (users use hardware buttons) */
+  .ms-volume { display: none; }
+  
+  /* Hide bottom-left play button on mobile (use the huge center one instead) */
+  .ms-controls-left > .ms-btn.icon:first-child { display: none; }
+  
+  /* Hide text buttons */
+  .ms-btn.small { display: none; }
+  
+  /* Adjust timeline to sit seamlessly at the absolute bottom edge of the player */
+  .ms-bottom-bar { 
+    bottom: 0; 
+    left: 0; 
+    right: 0; 
+    gap: 0; 
+    background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%);
+    padding-top: 24px;
+  }
+  
+  .ms-timeline { 
+    margin: 0; 
+    padding: 0; 
+    width: 100%; 
+    height: 4px;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+  }
+  
+  .ms-timeline-range { border-radius: 0; }
+  .ms-timeline:hover .ms-timeline-range { height: 4px; }
+  
+  /* Layout the remaining controls neatly */
+  .ms-controls { 
+    flex-wrap: nowrap; 
+    gap: 8px; 
+    padding: 8px 12px 14px 12px; /* Pad above the bottom timeline */
+  }
+  
+  .ms-controls-left, .ms-controls-right { gap: 8px; }
+  .ms-time { font-size: 12px; margin-left: 4px; }
+  .ms-btn { padding: 4px; }
 }
 
 /* Speed Indicator */
