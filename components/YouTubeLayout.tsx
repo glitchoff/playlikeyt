@@ -2,9 +2,20 @@
 
 import { useState } from 'react';
 import { Search, Upload, Video } from 'lucide-react';
+
+const GithubIcon = ({ className }: { className?: string }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    className={className}
+  >
+    <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
+  </svg>
+);
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Home, PlaySquare, MonitorPlay, UserSquare2 } from 'lucide-react';
+import { Home, PlaySquare, MonitorPlay, UserSquare2, RotateCw } from 'lucide-react';
 
 interface YouTubeLayoutProps {
   children: React.ReactNode;
@@ -13,6 +24,7 @@ interface YouTubeLayoutProps {
 
 export default function YouTubeLayout({ children, currentView }: YouTubeLayoutProps) {
   const [searchQuery, setSearchQuery] = useState('');
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
   const router = useRouter();
 
   return (
@@ -52,6 +64,16 @@ export default function YouTubeLayout({ children, currentView }: YouTubeLayoutPr
           {/* Right: Upload + User */}
           <div className="flex items-center gap-3">
             <Link
+              href="https://github.com/glitchoff/playlikeyt"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 px-3 py-2 rounded-full transition-colors hover:bg-gray-100 dark:hover:bg-[#272727]"
+              title="GitHub Repository"
+            >
+              <GithubIcon className="w-5 h-5 text-gray-700 dark:text-gray-200" />
+            </Link>
+
+            <Link
               href="/upload"
               className={`flex items-center gap-2 px-3 py-2 rounded-full transition-colors ${
                 currentView === 'upload' 
@@ -63,8 +85,70 @@ export default function YouTubeLayout({ children, currentView }: YouTubeLayoutPr
               <Upload className="w-5 h-5 text-gray-700 dark:text-gray-200" />
             </Link>
             
-            <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-medium cursor-pointer">
-              U
+            <div className="relative">
+              <button 
+                onClick={() => setShowProfileMenu(!showProfileMenu)}
+                className="w-9 h-9 rounded-full overflow-hidden flex items-center justify-center cursor-pointer hover:ring-2 hover:ring-blue-400 transition-all focus:outline-none bg-gray-100 dark:bg-[#272727]"
+              >
+                <img 
+                  src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" 
+                  alt="User Avatar"
+                  className="w-full h-full object-cover"
+                />
+              </button>
+
+              {showProfileMenu && (
+                <>
+                  <div 
+                    className="fixed inset-0 z-40" 
+                    onClick={() => setShowProfileMenu(false)}
+                  />
+                  <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-[#282828] border border-gray-200 dark:border-transparent rounded-xl shadow-xl z-50 py-2 overflow-hidden animate-in fade-in zoom-in duration-150 origin-top-right">
+                    <div className="px-4 py-3 border-b border-gray-100 dark:border-[#3f3f3f] flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-100 dark:bg-[#3f3f3f]">
+                        <img 
+                          src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" 
+                          alt="User Avatar"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="font-medium text-sm dark:text-white">User</span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">Local Account</span>
+                      </div>
+                    </div>
+                    <div className="py-1">
+                      <button 
+                        onClick={() => {
+                          setShowProfileMenu(false);
+                          window.location.reload();
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-[#3f3f3f] transition-colors"
+                      >
+                        <RotateCw className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                        Refresh Page
+                      </button>
+                      <Link 
+                        href="/about" 
+                        onClick={() => setShowProfileMenu(false)}
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-[#3f3f3f] transition-colors"
+                      >
+                        <UserSquare2 className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                        About PlayLikeYT
+                      </Link>
+                      <Link 
+                        href="https://github.com/glitchoff/playlikeyt" 
+                        target="_blank"
+                        onClick={() => setShowProfileMenu(false)}
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-[#3f3f3f] transition-colors"
+                      >
+                        <GithubIcon className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                        GitHub Repository
+                      </Link>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>

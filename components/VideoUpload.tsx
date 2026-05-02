@@ -234,7 +234,7 @@ export default function VideoUpload({ onUploadComplete, selectedFolderId }: Vide
           <p className="flex items-start gap-2">
             <span className="text-lg leading-none">ℹ️</span>
             <span>
-              <strong>Note:</strong> Videos are securely cached in your browser's private storage and will automatically be cleared after <strong>2 days</strong> to save space. Your original physical files on your hard drive are <strong>never</strong> deleted or modified, and you can re-add them at any time!
+              <strong>Note:</strong> Videos are securely cached in your browser's private storage and will automatically be cleared after <strong>15 days</strong> to save space. Your original physical files on your hard drive are <strong>never</strong> deleted or modified, and you can re-add them at any time!
             </span>
           </p>
         </div>

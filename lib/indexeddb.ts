@@ -117,12 +117,12 @@ export async function cleanupOldVideos(): Promise<void> {
     const tx = db.transaction('videos', 'readonly');
     const store = tx.objectStore('videos');
     
-    const twoDaysAgo = new Date(Date.now() - 48 * 60 * 60 * 1000);
+    const fifteenDaysAgo = new Date(Date.now() - 15 * 24 * 60 * 60 * 1000);
     const oldVideoIds: string[] = [];
     
     let cursor = await store.openCursor();
     while (cursor) {
-      if (new Date(cursor.value.uploadedAt) < twoDaysAgo) {
+      if (new Date(cursor.value.uploadedAt) < fifteenDaysAgo) {
         if (cursor.value.id) {
           oldVideoIds.push(cursor.value.id);
         }

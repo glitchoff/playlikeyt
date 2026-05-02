@@ -13,7 +13,9 @@ export default function PlayLikeYTApp() {
         <div className="space-y-6 sm:space-y-8">
           <div>
             <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-1 sm:mb-2">Your Videos</h2>
-            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">Upload and organize your video collection</p>
+            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
+              Upload and organize your video collection • <a href="https://github.com/glitchoff/playlikeyt" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 hover:underline transition-colors">View on GitHub</a>
+            </p>
           </div>
           
           <VideoGrid

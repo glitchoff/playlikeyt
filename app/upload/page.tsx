@@ -36,8 +36,8 @@ export default function UploadPage() {
       <div className="p-3 sm:p-4 md:p-6 max-w-4xl mx-auto">
         <div className="space-y-6 sm:space-y-8">
           <div>
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1 sm:mb-2">Upload Videos</h2>
-            <p className="text-sm sm:text-base text-gray-600">Add videos to your collection</p>
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-1 sm:mb-2">Upload Videos</h2>
+            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">Add videos to your collection</p>
           </div>
           
           <VideoUpload 
@@ -47,10 +47,10 @@ export default function UploadPage() {
           
           {folders.length > 0 && (
             <div className="mt-8">
-              <h3 className="text-xl font-bold text-gray-900 mb-4">Your Playlists</h3>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Your Playlists</h3>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                 {folders.map(folder => (
-                  <div key={folder.id} className="relative bg-white rounded-lg p-4 border border-gray-200 shadow-sm flex flex-col items-center justify-center aspect-square hover:bg-gray-50 transition-colors group">
+                  <div key={folder.id} className="relative bg-white dark:bg-[#1a1a1a] rounded-lg p-4 border border-gray-200 dark:border-[#303030] shadow-sm flex flex-col items-center justify-center aspect-square hover:bg-gray-50 dark:hover:bg-[#272727] transition-colors group">
                     <button 
                       onClick={(e) => {
                         e.stopPropagation();
@@ -67,7 +67,7 @@ export default function UploadPage() {
                       ) : (
                         <span className="text-4xl mb-2">📁</span>
                       )}
-                      <span className="font-medium text-gray-800 text-center line-clamp-2">{folder.name}</span>
+                      <span className="font-medium text-gray-800 dark:text-gray-200 text-center line-clamp-2">{folder.name}</span>
                     </div>
                   </div>
                 ))}
