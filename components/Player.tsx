@@ -208,7 +208,9 @@ export default function Player({ src, poster, subtitleUrl = null, mediaId = null
         if (e.repeat) return;
         e.preventDefault();
         
-        const newSpeed = e.ctrlKey ? (speed === 3 ? 1 : 3) : (speed === 2 || speed === 3 ? 1 : 2);
+        // backtick: 1x/2x toggle | ctrl + backtick: 1x/3x toggle
+        const newSpeed = e.ctrlKey ? (speed === 3 ? 1 : 3) : (speed === 2 ? 1 : 2);
+        
         setSpeed(newSpeed);
         showFeedback(`${newSpeed}x`);
         return;
@@ -751,8 +753,8 @@ export default function Player({ src, poster, subtitleUrl = null, mediaId = null
                 <Settings size={16} />
               </button>
               {speedMenuOpen && (
-                <div className="ms-popover-menu" style={{ top: 'auto', bottom: '42px', minWidth: '120px' }}>
-                  {[0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 2.5, 3, 3.5, 4].map((v) => (
+                <div className="ms-popover-menu" style={{ top: 'auto', bottom: '42px', minWidth: '150px' }}>
+                  {[0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.5, 3, 3.5, 4].map((v) => (
                     <button 
                       key={v} 
                       className="ms-popover-item"
@@ -765,6 +767,35 @@ export default function Player({ src, poster, subtitleUrl = null, mediaId = null
                       {v}x {speed === v && '✓'}
                     </button>
                   ))}
+                  <div className="ms-popover-divider" />
+                  <div style={{ padding: '8px 12px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6, fontSize: 11, opacity: 0.7 }}>
+                      <span>Custom</span>
+                      <span style={{ fontWeight: 600, fontSize: 12, opacity: 1 }}>{speed.toFixed(2)}x</span>
+                    </div>
+                    <input
+                      type="range"
+                      min={0.1}
+                      max={4}
+                      step={0.05}
+                      value={speed}
+                      className="ms-range"
+                      style={{
+                        width: '100%',
+                        background: `linear-gradient(90deg, #ffcf33 ${((speed - 0.1) / 3.9) * 100}%, rgba(255,255,255,0.2) ${((speed - 0.1) / 3.9) * 100}%)`
+                      }}
+                      onChange={(e) => {
+                        const v = parseFloat(e.target.value);
+                        setSpeed(v);
+                        showFeedback(`${v.toFixed(2)}x`);
+                      }}
+                      aria-label="Custom speed"
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, opacity: 0.5, marginTop: 2 }}>
+                      <span>0.1x</span>
+                      <span>4x</span>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>

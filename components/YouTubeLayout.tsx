@@ -1,7 +1,7 @@
 'use client';
 
 import { Suspense, useState, useCallback } from 'react';
-import { Search, Upload, Video } from 'lucide-react';
+import { Search, Upload } from 'lucide-react';
 
 const GithubIcon = ({ className }: { className?: string }) => (
   <svg
