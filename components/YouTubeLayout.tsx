@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState, useCallback } from 'react';
 import { Search, Upload, Video } from 'lucide-react';
 
 const GithubIcon = ({ className }: { className?: string }) => (
@@ -13,7 +13,7 @@ const GithubIcon = ({ className }: { className?: string }) => (
     <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
   </svg>
 );
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Home, PlaySquare, MonitorPlay, UserSquare2, RotateCw } from 'lucide-react';
 
@@ -22,10 +22,17 @@ interface YouTubeLayoutProps {
   currentView?: string;
 }
 
-export default function YouTubeLayout({ children, currentView }: YouTubeLayoutProps) {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [showProfileMenu, setShowProfileMenu] = useState(false);
+function YouTubeLayoutInner({ children, currentView }: YouTubeLayoutProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('q') ?? '');
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+
+  const handleSearch = useCallback(() => {
+    const q = searchQuery.trim();
+    if (q) router.push(`/search?q=${encodeURIComponent(q)}`);
+    else router.push('/search');
+  }, [searchQuery, router]);
 
   return (
     <div className="min-h-screen bg-white dark:bg-[#0f0f0f] text-gray-900 dark:text-white transition-colors duration-200">
@@ -36,18 +43,22 @@ export default function YouTubeLayout({ children, currentView }: YouTubeLayoutPr
           <div className="flex items-center gap-2 sm:gap-4">
             <Link 
               href="/"
-              className="flex items-center gap-1.5 cursor-pointer"
+              className="flex items-center gap-2 cursor-pointer"
             >
-              <div className="bg-[#FF0000] rounded-lg px-2 py-1">
-                <Video className="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="currentColor" />
-              </div>
+              <picture>
+                <source srcSet="/logo.avif" type="image/avif" />
+                <img src="/logo.png" alt="PlayLikeYT logo" className="w-8 h-8 sm:w-9 sm:h-9 object-contain" />
+              </picture>
               <span className="text-xl font-bold tracking-tight hidden xs:inline dark:text-white">PlayLikeYT</span>
             </Link>
           </div>
 
           {/* Center: Search */}
           <div className="hidden sm:flex flex-1 max-w-xs sm:max-w-md md:max-w-lg lg:max-w-2xl mx-4">
-            <div className="flex items-center w-full">
+            <form
+              className="flex items-center w-full"
+              onSubmit={(e) => { e.preventDefault(); handleSearch(); }}
+            >
               <input
                 type="text"
                 value={searchQuery}
@@ -55,10 +66,13 @@ export default function YouTubeLayout({ children, currentView }: YouTubeLayoutPr
                 placeholder="Search"
                 className="flex-1 px-4 py-2 border border-gray-300 dark:border-[#303030] bg-white dark:bg-[#121212] rounded-l-full focus:outline-none focus:border-blue-500 dark:focus:border-[#1c62b9] focus:ml-[-1px] text-base placeholder-gray-500 dark:placeholder-gray-400 dark:text-white"
               />
-              <button className="px-5 py-2 bg-gray-50 dark:bg-[#222222] border border-l-0 border-gray-300 dark:border-[#303030] rounded-r-full hover:bg-gray-100 dark:hover:bg-[#303030] transition-colors">
+              <button
+                type="submit"
+                className="px-5 py-2 bg-gray-50 dark:bg-[#222222] border border-l-0 border-gray-300 dark:border-[#303030] rounded-r-full hover:bg-gray-100 dark:hover:bg-[#303030] transition-colors"
+              >
                 <Search className="w-5 h-5 text-gray-600 dark:text-gray-300" />
               </button>
-            </div>
+            </form>
           </div>
 
           {/* Right: Upload + User */}
@@ -161,5 +175,18 @@ export default function YouTubeLayout({ children, currentView }: YouTubeLayoutPr
         </main>
       </div>
     </div>
+  );
+}
+
+export default function YouTubeLayout(props: YouTubeLayoutProps) {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-white dark:bg-[#0f0f0f]">
+        <header className="fixed top-0 left-0 right-0 z-50 h-14 bg-white dark:bg-[#0f0f0f] border-b border-gray-200 dark:border-transparent" />
+        <div className="pt-14">{props.children}</div>
+      </div>
+    }>
+      <YouTubeLayoutInner {...props} />
+    </Suspense>
   );
 }
