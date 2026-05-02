@@ -107,13 +107,14 @@
   font-size: 24px;
   font-weight: 600;
   pointer-events: none;
-  animation: ms-fade-out 0.8s ease forwards;
+  animation: ms-fade-out 0.9s ease forwards;
   will-change: opacity, transform;
 }
 
 @keyframes ms-fade-out {
-  0% { opacity: 1; transform: translate(-50%, -50%) scale(0.95); }
-  15% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+  10%  { opacity: 1; transform: translate(-50%, -50%) scale(1.05); }
+  25%  { opacity: 1; transform: translate(-50%, -50%) scale(1); }
   100% { opacity: 0; transform: translate(-50%, -50%) scale(1.05); }
 }
 

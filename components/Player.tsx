@@ -20,6 +20,7 @@ import {
   BookmarkPlus as BookmarkIcon,
 } from 'lucide-react';
 import { Bookmark } from '@/lib/indexeddb';
+import { useSettings } from '@/lib/SettingsContext';
 
 /**
  * Player.tsx
@@ -68,7 +69,7 @@ export default function Player({ src, poster, subtitleUrl = null, mediaId = null
   const [current, setCurrent] = useState(0);
   const [dur, setDur] = useState<number>(0);
   const [volume, setVolume] = useState(1);
-  const [speed, setSpeed] = useState(1);
+  const { playbackRate: speed, setPlaybackRate: setSpeed } = useSettings();
   const [ambient, setAmbient] = useState(true);
   const [showStats, setShowStats] = useState(false);
   const [subtitlesOn, setSubtitlesOn] = useState(Boolean(subtitleUrl));
@@ -76,6 +77,7 @@ export default function Player({ src, poster, subtitleUrl = null, mediaId = null
   const [speedMenuOpen, setSpeedMenuOpen] = useState(false);
   const [controlsVisible, setControlsVisible] = useState(true);
   const [centerFeedback, setCenterFeedback] = useState<React.ReactNode | null>(null);
+  const [feedbackKey, setFeedbackKey] = useState(0);
   const prevFrameRef = useRef<ImageData | null>(null);
   const drawRef = useRef<number | null>(null);
   const hideTimeoutRef = useRef<number | null>(null);
@@ -122,12 +124,13 @@ export default function Player({ src, poster, subtitleUrl = null, mediaId = null
   
   const showFeedback = useCallback((content: React.ReactNode) => {
     setCenterFeedback(content);
+    setFeedbackKey((k) => k + 1);
     if (feedbackTimeoutRef.current !== null) {
       window.clearTimeout(feedbackTimeoutRef.current);
     }
     feedbackTimeoutRef.current = window.setTimeout(() => {
       setCenterFeedback(null);
-    }, 800) as unknown as number;
+    }, 900) as unknown as number;
   }, []);
 
   const showControls = useCallback(() => {
@@ -146,13 +149,7 @@ export default function Player({ src, poster, subtitleUrl = null, mediaId = null
     showControls();
   }, [playing, showControls]);
 
-  // --- speed indicator effect ---
-  useEffect(() => {
-    if (initialSpeedRef.current !== speed) {
-      showFeedback(`${speed}x`);
-      initialSpeedRef.current = speed;
-    }
-  }, [speed, showFeedback]);
+
 
   // --- start position ---
   useEffect(() => {
@@ -178,6 +175,13 @@ export default function Player({ src, poster, subtitleUrl = null, mediaId = null
     }
   }, []);
 
+  // --- sync speed from context to video ---
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.playbackRate = speed;
+    }
+  }, [speed]);
+
   // --- keyboard shortcuts ---
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -190,12 +194,12 @@ export default function Player({ src, poster, subtitleUrl = null, mediaId = null
       const code = e.code;
 
       if (code === 'Backquote' || key === '`' || key === '~') {
+        if (e.repeat) return;
         e.preventDefault();
-        setSpeed((prev) => {
-          const newSpeed = e.ctrlKey ? (prev === 3 ? 1 : 3) : (prev === 2 ? 1 : 2);
-          v.playbackRate = newSpeed;
-          return newSpeed;
-        });
+        
+        const newSpeed = e.ctrlKey ? (speed === 3 ? 1 : 3) : (speed === 2 || speed === 3 ? 1 : 2);
+        setSpeed(newSpeed);
+        showFeedback(`${newSpeed}x`);
         return;
       }
 
@@ -285,7 +289,7 @@ export default function Player({ src, poster, subtitleUrl = null, mediaId = null
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [togglePlay, toggleFullscreen]);
+  }, [togglePlay, toggleFullscreen, speed, setSpeed]);
 
   // --- wire video events ---
   useEffect(() => {
@@ -305,6 +309,9 @@ export default function Player({ src, poster, subtitleUrl = null, mediaId = null
     v.addEventListener('play', onPlay);
     v.addEventListener('pause', onPause);
     v.addEventListener('ended', onEndedEvent);
+
+    // Initial speed sync
+    if (v) v.playbackRate = speed;
 
     return () => {
       v.removeEventListener('timeupdate', onTime);
@@ -600,7 +607,7 @@ export default function Player({ src, poster, subtitleUrl = null, mediaId = null
 
         {/* center feedback popup indicator */}
         {centerFeedback && (
-          <div className="ms-speed-indicator">
+          <div key={feedbackKey} className="ms-speed-indicator">
             {centerFeedback}
           </div>
         )}
@@ -741,7 +748,7 @@ export default function Player({ src, poster, subtitleUrl = null, mediaId = null
                       className="ms-popover-item"
                       onClick={() => {
                         setSpeed(v);
-                        if (videoRef.current) videoRef.current.playbackRate = v;
+                        showFeedback(`${v}x`);
                         setSpeedMenuOpen(false);
                       }}
                     >

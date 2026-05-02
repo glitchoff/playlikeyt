@@ -58,6 +58,39 @@ export default function AboutPage() {
             </div>
           </div>
 
+          {/* Keyboard Shortcuts Section */}
+          <div className="bg-blue-50 dark:bg-blue-900/10 p-6 rounded-2xl border border-blue-100 dark:border-blue-900/20 mt-8">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+              Keyboard Shortcuts
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-4">
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-gray-600 dark:text-gray-400">Cycle Playback Speed</span>
+                <kbd className="px-2 py-1 bg-white dark:bg-[#2a2a2a] border border-gray-300 dark:border-[#3f3f3f] rounded-md font-mono text-gray-900 dark:text-white shadow-sm">` / ~</kbd>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-gray-600 dark:text-gray-400">Toggle Play/Pause</span>
+                <kbd className="px-2 py-1 bg-white dark:bg-[#2a2a2a] border border-gray-300 dark:border-[#3f3f3f] rounded-md font-mono text-gray-900 dark:text-white shadow-sm">Space / K</kbd>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-gray-600 dark:text-gray-400">Toggle Fullscreen</span>
+                <kbd className="px-2 py-1 bg-white dark:bg-[#2a2a2a] border border-gray-300 dark:border-[#3f3f3f] rounded-md font-mono text-gray-900 dark:text-white shadow-sm">F</kbd>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-gray-600 dark:text-gray-400">Seek 10s Backward/Forward</span>
+                <kbd className="px-2 py-1 bg-white dark:bg-[#2a2a2a] border border-gray-300 dark:border-[#3f3f3f] rounded-md font-mono text-gray-900 dark:text-white shadow-sm">J / L</kbd>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-gray-600 dark:text-gray-400">Volume Up/Down</span>
+                <kbd className="px-2 py-1 bg-white dark:bg-[#2a2a2a] border border-gray-300 dark:border-[#3f3f3f] rounded-md font-mono text-gray-900 dark:text-white shadow-sm">↑ / ↓</kbd>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-gray-600 dark:text-gray-400">Mute Toggle</span>
+                <kbd className="px-2 py-1 bg-white dark:bg-[#2a2a2a] border border-gray-300 dark:border-[#3f3f3f] rounded-md font-mono text-gray-900 dark:text-white shadow-sm">M</kbd>
+              </div>
+            </div>
+          </div>
+
           {/* Call to Action */}
           <div className="pt-6 border-t border-gray-200 dark:border-[#2a2a2a]">
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Open Source</h2>
