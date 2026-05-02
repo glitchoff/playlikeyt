@@ -17,7 +17,9 @@ import {
   Volume1,
   Volume2,
   VolumeX,
+  BookmarkPlus as BookmarkIcon,
 } from 'lucide-react';
+import { Bookmark } from '@/lib/indexeddb';
 
 /**
  * Player.tsx
@@ -38,11 +40,14 @@ type Props = {
   subtitleUrl?: string | null;
   mediaId?: number | null;
   className?: string;
+  onEnded?: () => void;
+  bookmarks?: Bookmark[];
+  onAddBookmark?: (time: number) => void;
 };
 
 const SAVE_INTERVAL_MS = 5000;
 
-const SeekBus = {
+export const SeekBus = {
   subs: new Set<(s: number) => void>(),
   on(cb: (s: number) => void) {
     this.subs.add(cb);
@@ -53,7 +58,7 @@ const SeekBus = {
   },
 };
 
-export default function Player({ src, poster, subtitleUrl = null, mediaId = null, className }: Props) {
+export default function Player({ src, poster, subtitleUrl = null, mediaId = null, className, onEnded, bookmarks = [], onAddBookmark }: Props) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const ambientCanvasRef = useRef<HTMLCanvasElement | null>(null);
 
@@ -264,19 +269,25 @@ export default function Player({ src, poster, subtitleUrl = null, mediaId = null
     const onDur = () => setDur(v.duration || 0);
     const onPlay = () => setPlaying(true);
     const onPause = () => setPlaying(false);
+    const onEndedEvent = () => {
+      setPlaying(false);
+      if (onEnded) onEnded();
+    };
 
     v.addEventListener('timeupdate', onTime);
     v.addEventListener('durationchange', onDur);
     v.addEventListener('play', onPlay);
     v.addEventListener('pause', onPause);
+    v.addEventListener('ended', onEndedEvent);
 
     return () => {
       v.removeEventListener('timeupdate', onTime);
       v.removeEventListener('durationchange', onDur);
       v.removeEventListener('play', onPlay);
       v.removeEventListener('pause', onPause);
+      v.removeEventListener('ended', onEndedEvent);
     };
-  }, []);
+  }, [onEnded]);
 
   // --- periodic save progress (placeholder) ---
   useEffect(() => {
@@ -538,7 +549,7 @@ export default function Player({ src, poster, subtitleUrl = null, mediaId = null
 
         {/* bottom controls wrapper */}
         <div className={`ms-bottom-bar ${controlsVisible ? '' : 'ms-controls-hidden'}`}>
-          <div className="ms-timeline">
+          <div className="ms-timeline" style={{ position: 'relative' }}>
             <input
               className="ms-timeline-range"
               type="range"
@@ -547,7 +558,9 @@ export default function Player({ src, poster, subtitleUrl = null, mediaId = null
               step={0.1}
               value={current}
               style={{
-                background: `linear-gradient(90deg, #ffcf33 ${(current / (dur || 1)) * 100}%, rgba(255,255,255,0.2) ${(current / (dur || 1)) * 100}%)`
+                background: `linear-gradient(90deg, #ffcf33 ${(current / (dur || 1)) * 100}%, rgba(255,255,255,0.2) ${(current / (dur || 1)) * 100}%)`,
+                position: 'relative',
+                zIndex: 2,
               }}
               onChange={(e) => {
                 const t = Number(e.target.value || 0);
@@ -555,6 +568,29 @@ export default function Player({ src, poster, subtitleUrl = null, mediaId = null
                 setCurrent(t);
               }}
             />
+            {/* Bookmark Dots */}
+            {dur > 0 && bookmarks.map((b, i) => {
+              const leftPct = (b.time / dur) * 100;
+              return (
+                <div
+                  key={i}
+                  title={b.label}
+                  style={{
+                    position: 'absolute',
+                    left: `${leftPct}%`,
+                    top: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    width: '6px',
+                    height: '6px',
+                    backgroundColor: '#fff',
+                    borderRadius: '50%',
+                    zIndex: 3,
+                    pointerEvents: 'none',
+                    boxShadow: '0 0 2px rgba(0,0,0,0.5)'
+                  }}
+                />
+              );
+            })}
           </div>
 
           <div className="ms-controls">
@@ -618,7 +654,19 @@ export default function Player({ src, poster, subtitleUrl = null, mediaId = null
               </div>
             </div>
 
-          <div className="ms-controls-right">
+            <div className="ms-controls-right">
+            {onAddBookmark && (
+              <button 
+                className="ms-btn" 
+                onClick={() => {
+                  if (videoRef.current) onAddBookmark(videoRef.current.currentTime);
+                }} 
+                title="Add Bookmark"
+              >
+                <BookmarkIcon size={16} />
+              </button>
+            )}
+
             <div className="ms-popover" ref={popoverRef}>
               <button 
                 className="ms-btn icon" 

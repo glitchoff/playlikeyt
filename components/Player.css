@@ -48,8 +48,14 @@
 
 /* small responsive niceties */
 @media (max-width: 640px) {
-  .ms-range { width:70px; }
-  .ms-timeline { margin: 0 8px; }
+  .ms-range { width:60px; }
+  .ms-timeline { margin: 0 4px; padding: 8px 0; }
+  .ms-btn { padding: 6px; }
+  .ms-btn.small { display: none; } /* Hide -10s / +10s text buttons on mobile */
+  .ms-time { font-size: 11px; }
+  .ms-controls { flex-wrap: wrap; gap: 8px; }
+  .ms-controls-left, .ms-controls-right { gap: 6px; }
+  .ms-bottom-bar { bottom: 8px; left: 8px; right: 8px; }
 }
 
 /* Speed Indicator */

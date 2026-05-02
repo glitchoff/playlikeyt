@@ -104,79 +104,43 @@ export default function VideoGrid({ onVideoSelect, refreshTrigger }: VideoGridPr
   }
 
   return (
-    <div className="space-y-6 sm:space-y-8">
-      {/* Banner Section */}
-      <div className="w-full">
-        <div className="bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 rounded-xl p-6 sm:p-8 text-white">
-          <h1 className="text-2xl sm:text-3xl font-bold mb-2">Welcome to PlayLikeYT</h1>
-          <p className="text-sm sm:text-base opacity-90">Your personal video collection, beautifully organized</p>
-        </div>
-      </div>
-
-      {/* Folders Section */}
-      <div>
-        <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-3 sm:mb-4">Playlists</h2>
-        <div className="flex gap-2 sm:gap-3 mb-6 overflow-x-auto pb-2">
+    <div className="pb-8">
+      {/* Categories/Folders Chip Row */}
+      <div className="sticky top-14 z-30 bg-white/95 dark:bg-[#0f0f0f]/95 backdrop-blur-sm border-b border-gray-200 dark:border-transparent py-3 px-4 sm:px-6">
+        <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide no-scrollbar">
+          {/* "All" Chip */}
+          <button
+            onClick={() => setSelectedFolderId(undefined)}
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
+              !selectedFolderId
+                ? 'bg-black text-white dark:bg-white dark:text-black'
+                : 'bg-gray-100 text-gray-800 hover:bg-gray-200 dark:bg-[#272727] dark:text-gray-200 dark:hover:bg-[#3f3f3f]'
+            }`}
+          >
+            All
+          </button>
+          
+          {/* Folder Chips */}
           {folders.map((folder) => (
             <button
               key={folder.id}
               onClick={() => handleFolderSelect(folder.id!)}
-              className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg transition-colors whitespace-nowrap ${
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
                 selectedFolderId === folder.id
-                  ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900'
-                  : 'bg-gray-100 dark:bg-[#272727] text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-[#3f3f3f]'
+                  ? 'bg-black text-white dark:bg-white dark:text-black'
+                  : 'bg-gray-100 text-gray-800 hover:bg-gray-200 dark:bg-[#272727] dark:text-gray-200 dark:hover:bg-[#3f3f3f]'
               }`}
             >
-              {folder.thumbnail ? (
-                <img src={folder.thumbnail} alt="" className="w-5 h-5 sm:w-6 sm:h-6 object-cover rounded-sm" />
-              ) : (
-                <span className="text-lg sm:text-xl">📁</span>
-              )}
-              <span className="text-sm sm:text-base font-medium">{folder.name}</span>
+              {folder.name}
             </button>
           ))}
-          
-          {/* All Videos Button */}
-          <button
-            onClick={() => setSelectedFolderId(undefined)}
-            className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg transition-colors whitespace-nowrap ${
-              !selectedFolderId
-                ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900'
-                : 'bg-gray-100 dark:bg-[#272727] text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-[#3f3f3f]'
-            }`}
-          >
-            <Users className="w-4 h-4 sm:w-5 sm:h-5" />
-            <span className="text-sm sm:text-base font-medium">All Videos</span>
-          </button>
         </div>
       </div>
 
-      {/* Recently Watched Section */}
-      {recentlyWatched.length > 0 && (
-        <div>
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-3 sm:mb-4">Recently Watched</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-y-10 gap-x-4">
-            {recentlyWatched.map((video) => (
-              <YouTubeVideoCard
-                key={video.id}
-                video={video}
-                onSelect={handleVideoSelectClick}
-                onDelete={handleDeleteVideo}
-              />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Videos Section */}
-      <div>
-        <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-3 sm:mb-4">
-          {selectedFolderId ? folders.find(f => f.id === selectedFolderId)?.name : 'All Videos'} 
-          <span className="text-base sm:text-lg font-normal text-gray-600 dark:text-gray-400"> ({videos.length})</span>
-        </h2>
-        
+      {/* Videos Grid */}
+      <div className="p-4 sm:p-6">
         {videos.length === 0 ? (
-          <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+          <div className="text-center py-12 text-gray-500 dark:text-gray-400 mt-10">
             <div className="bg-gray-100 dark:bg-[#272727] w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-4">
               <Play className="w-12 h-12 text-gray-400 dark:text-gray-500" />
             </div>

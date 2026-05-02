@@ -1,5 +1,10 @@
 import { openDB, DBSchema, IDBPDatabase } from 'idb';
 
+export interface Bookmark {
+  time: number;
+  label: string;
+}
+
 export interface VideoMetadata {
   id?: string;
   name: string;
@@ -11,6 +16,7 @@ export interface VideoMetadata {
   uploadedAt: Date;
   blob?: Blob;
   opfs?: boolean;
+  bookmarks?: Bookmark[];
 }
 
 export interface Folder {
@@ -39,12 +45,20 @@ interface VideoDBSchema extends DBSchema {
   };
 }
 
-let db: IDBPDatabase<VideoDBSchema>;
+let dbPromise: Promise<IDBPDatabase<VideoDBSchema>> | null = null;
 
 export async function initDB(): Promise<IDBPDatabase<VideoDBSchema>> {
-  if (db) return db;
+  if (dbPromise) {
+    try {
+      const db = await dbPromise;
+      // Test if it's closed by starting a dummy transaction or just relying on event listeners we add below
+      return db;
+    } catch (e) {
+      dbPromise = null;
+    }
+  }
   
-  db = await openDB<VideoDBSchema>('VideoPlayerDB', 1, {
+  dbPromise = openDB<VideoDBSchema>('VideoPlayerDB', 1, {
     upgrade(db) {
       const videoStore = db.createObjectStore('videos', { keyPath: 'id' });
       videoStore.createIndex('by-folder', 'folderId');
@@ -53,9 +67,21 @@ export async function initDB(): Promise<IDBPDatabase<VideoDBSchema>> {
       const folderStore = db.createObjectStore('folders', { keyPath: 'id' });
       folderStore.createIndex('by-parent', 'parentId');
     },
+    terminated() {
+      dbPromise = null;
+    }
+  }).then(db => {
+    db.addEventListener('close', () => {
+      dbPromise = null;
+    });
+    db.addEventListener('versionchange', () => {
+      db.close();
+      dbPromise = null;
+    });
+    return db;
   });
   
-  return db;
+  return dbPromise;
 }
 
 export async function saveVideo(video: VideoMetadata): Promise<string> {
@@ -84,7 +110,36 @@ export async function saveVideo(video: VideoMetadata): Promise<string> {
   return id;
 }
 
+export async function cleanupOldVideos(): Promise<void> {
+  try {
+    const db = await initDB();
+    const tx = db.transaction('videos', 'readonly');
+    const store = tx.objectStore('videos');
+    
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const oldVideoIds: string[] = [];
+    
+    let cursor = await store.openCursor();
+    while (cursor) {
+      if (new Date(cursor.value.uploadedAt) < oneDayAgo) {
+        if (cursor.value.id) {
+          oldVideoIds.push(cursor.value.id);
+        }
+      }
+      cursor = await cursor.continue();
+    }
+    
+    for (const id of oldVideoIds) {
+      await deleteVideo(id);
+    }
+  } catch (err) {
+    console.error('Failed to cleanup old videos:', err);
+  }
+}
+
 export async function getVideos(folderId?: string): Promise<VideoMetadata[]> {
+  cleanupOldVideos().catch(console.error); // Run async, don't await, prevents blocking
+  
   const db = await initDB();
   const tx = db.transaction('videos', 'readonly');
   const store = tx.objectStore('videos');
