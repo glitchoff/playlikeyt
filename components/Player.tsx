@@ -188,7 +188,18 @@ export default function Player({ src, poster, subtitleUrl = null, mediaId = null
       const v = videoRef.current;
       if (!v) return;
       const target = e.target as HTMLElement;
-      if (['INPUT', 'TEXTAREA'].includes(target.tagName) || target.isContentEditable) return;
+      const isInInput = ['INPUT', 'TEXTAREA'].includes(target.tagName) || target.isContentEditable;
+
+      // Space: always prevent page scroll; toggle play only when not in an input
+      if (e.code === 'Space') {
+        if (!isInInput) {
+          e.preventDefault();
+          if (!e.repeat) togglePlay();
+        }
+        return;
+      }
+
+      if (isInInput) return;
 
       const key = e.key.toLowerCase();
       const code = e.code;
@@ -205,7 +216,6 @@ export default function Player({ src, poster, subtitleUrl = null, mediaId = null
 
       switch (key) {
         case 'k':
-        case ' ':
           e.preventDefault();
           togglePlay();
           break;
