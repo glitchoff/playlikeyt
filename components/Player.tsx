@@ -43,6 +43,8 @@ type Props = {
   onEnded?: () => void;
   bookmarks?: Bookmark[];
   onAddBookmark?: (time: number) => void;
+  startPosition?: number;
+  onProgress?: (time: number) => void;
 };
 
 const SAVE_INTERVAL_MS = 5000;
@@ -58,7 +60,7 @@ export const SeekBus = {
   },
 };
 
-export default function Player({ src, poster, subtitleUrl = null, mediaId = null, className, onEnded, bookmarks = [], onAddBookmark }: Props) {
+export default function Player({ src, poster, subtitleUrl = null, mediaId = null, className, onEnded, bookmarks = [], onAddBookmark, startPosition, onProgress }: Props) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const ambientCanvasRef = useRef<HTMLCanvasElement | null>(null);
 
@@ -81,6 +83,21 @@ export default function Player({ src, poster, subtitleUrl = null, mediaId = null
   const initialSpeedRef = useRef(speed);
   const containerRef = useRef<HTMLDivElement>(null);
   const isTogglingPlayRef = useRef(false);
+  const [showRipple, setShowRipple] = useState<'left' | 'right' | null>(null);
+
+  const handleDoubleTap = useCallback((direction: 'left' | 'right') => {
+    if (!videoRef.current) return;
+    setShowRipple(direction);
+    setTimeout(() => setShowRipple(null), 500);
+    
+    if (direction === 'left') {
+      videoRef.current.currentTime = Math.max(0, videoRef.current.currentTime - 10);
+      showFeedback('-10s');
+    } else {
+      videoRef.current.currentTime = Math.min(videoRef.current.duration || Infinity, videoRef.current.currentTime + 10);
+      showFeedback('+10s');
+    }
+  }, []);
 
   const togglePlay = useCallback(() => {
     if (!videoRef.current || isTogglingPlayRef.current) return;
@@ -136,6 +153,15 @@ export default function Player({ src, poster, subtitleUrl = null, mediaId = null
       initialSpeedRef.current = speed;
     }
   }, [speed, showFeedback]);
+
+  // --- start position ---
+  useEffect(() => {
+    if (videoRef.current && startPosition && startPosition > 0) {
+      videoRef.current.currentTime = startPosition;
+      setCurrent(startPosition);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [src]);
 
   // --- restore volume from localStorage ---
   useEffect(() => {
@@ -289,24 +315,24 @@ export default function Player({ src, poster, subtitleUrl = null, mediaId = null
     };
   }, [onEnded]);
 
-  // --- periodic save progress (placeholder) ---
+  // --- periodic save progress ---
   useEffect(() => {
     let id: number | null = null;
     const save = async () => {
       const v = videoRef.current;
-      if (!v || !mediaId || Number.isNaN(mediaId)) return;
-      const offset = Math.floor(v.currentTime);
-      const pct = dur ? Math.min(Math.round((offset / dur) * 100), 100) : 0;
-      if (pct < 5) return; // match Vue logic: don't save <5% progress
-      // TODO: call upsertProgress(mediaId, { progress_offset: offset })
-      console.debug('[Player] save progress', { mediaId, offset });
+      if (!v) return;
+      const pct = dur ? Math.min(Math.round((v.currentTime / dur) * 100), 100) : 0;
+      if (pct < 5 && v.currentTime < 10) return; // don't save very early progress
+      if (onProgress && v.currentTime > 0) {
+        onProgress(v.currentTime);
+      }
     };
     id = window.setInterval(save, SAVE_INTERVAL_MS) as unknown as number;
     return () => {
       if (id) window.clearInterval(id);
       save();
     };
-  }, [mediaId, dur]);
+  }, [dur, onProgress]);
 
   // --- seek bus subscription ---
   useEffect( () => {
@@ -493,6 +519,38 @@ export default function Player({ src, poster, subtitleUrl = null, mediaId = null
         }}
       >
         <video ref={videoRef} className="ms-video" src={src} poster={poster} playsInline />
+
+        {/* Double tap zones for mobile */}
+        <div 
+          className="absolute top-0 bottom-[60px] left-0 w-[40%] z-10"
+          onDoubleClick={(e) => { e.stopPropagation(); handleDoubleTap('left'); }}
+        />
+        <div 
+          className="absolute top-0 bottom-[60px] right-0 w-[40%] z-10"
+          onDoubleClick={(e) => { e.stopPropagation(); handleDoubleTap('right'); }}
+        />
+
+        {/* Ripples */}
+        {showRipple === 'left' && (
+          <div className="absolute inset-y-0 left-0 w-1/2 flex items-center justify-center pointer-events-none z-20 overflow-hidden">
+            <div className="w-full h-full bg-white/20 rounded-r-[100%] ms-ripple-container flex items-center justify-center">
+              <div className="flex flex-col items-center justify-center text-white/80 bg-black/40 rounded-full w-20 h-20">
+                <span className="text-xl">⏪</span>
+                <span className="text-sm font-medium">10s</span>
+              </div>
+            </div>
+          </div>
+        )}
+        {showRipple === 'right' && (
+          <div className="absolute inset-y-0 right-0 w-1/2 flex items-center justify-center pointer-events-none z-20 overflow-hidden">
+            <div className="w-full h-full bg-white/20 rounded-l-[100%] ms-ripple-container flex items-center justify-center">
+              <div className="flex flex-col items-center justify-center text-white/80 bg-black/40 rounded-full w-20 h-20">
+                <span className="text-xl">⏩</span>
+                <span className="text-sm font-medium">10s</span>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* three-dot popover (top-right) */}
         <div className={`ms-top-controls ${controlsVisible ? '' : 'ms-controls-hidden'}`}>

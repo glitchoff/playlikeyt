@@ -17,6 +17,7 @@ export interface VideoMetadata {
   blob?: Blob;
   opfs?: boolean;
   bookmarks?: Bookmark[];
+  lastPosition?: number;
 }
 
 export interface Folder {
@@ -116,12 +117,12 @@ export async function cleanupOldVideos(): Promise<void> {
     const tx = db.transaction('videos', 'readonly');
     const store = tx.objectStore('videos');
     
-    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const twoDaysAgo = new Date(Date.now() - 48 * 60 * 60 * 1000);
     const oldVideoIds: string[] = [];
     
     let cursor = await store.openCursor();
     while (cursor) {
-      if (new Date(cursor.value.uploadedAt) < oneDayAgo) {
+      if (new Date(cursor.value.uploadedAt) < twoDaysAgo) {
         if (cursor.value.id) {
           oldVideoIds.push(cursor.value.id);
         }
@@ -137,8 +138,53 @@ export async function cleanupOldVideos(): Promise<void> {
   }
 }
 
+export async function cleanupOrphanedOPFSFiles(): Promise<void> {
+  if (typeof navigator === 'undefined' || !navigator.storage || !navigator.storage.getDirectory) return;
+  
+  try {
+    const db = await initDB();
+    const opfsRoot = await navigator.storage.getDirectory();
+    
+    const tx = db.transaction('videos', 'readonly');
+    const store = tx.objectStore('videos');
+    const allKeys = await store.getAllKeys();
+    const validIds = new Set(allKeys.map(k => String(k)));
+    
+    // @ts-ignore
+    for await (const name of opfsRoot.keys()) {
+      if (!validIds.has(name)) {
+        console.log(`Deleting orphaned OPFS file: ${name}`);
+        await opfsRoot.removeEntry(name);
+      }
+    }
+  } catch (err) {
+    console.error('Failed to cleanup OPFS:', err);
+  }
+}
+
+export async function getTotalStorageUsed(): Promise<number> {
+  try {
+    const db = await initDB();
+    const tx = db.transaction('videos', 'readonly');
+    const store = tx.objectStore('videos');
+    
+    let totalBytes = 0;
+    let cursor = await store.openCursor();
+    while (cursor) {
+      totalBytes += cursor.value.size || 0;
+      cursor = await cursor.continue();
+    }
+    
+    return totalBytes;
+  } catch (err) {
+    console.error('Failed to calculate storage:', err);
+    return 0;
+  }
+}
+
 export async function getVideos(folderId?: string): Promise<VideoMetadata[]> {
   cleanupOldVideos().catch(console.error); // Run async, don't await, prevents blocking
+  cleanupOrphanedOPFSFiles().catch(console.error); // Sync OPFS with IDB to delete orphaned files
   
   const db = await initDB();
   const tx = db.transaction('videos', 'readonly');
@@ -198,7 +244,7 @@ export async function deleteVideo(id: string): Promise<void> {
       const opfsRoot = await navigator.storage.getDirectory();
       await opfsRoot.removeEntry(id);
     } catch (err) {
-      // Might not exist in OPFS, safely ignore
+      console.error(`Failed to delete OPFS entry for video ${id}:`, err);
     }
   }
 }
@@ -243,7 +289,7 @@ export async function deleteFolder(id: string): Promise<void> {
   const videos = await db.getAllFromIndex('videos', 'by-folder', id);
   for (const video of videos) {
     if (video.id) {
-      await db.delete('videos', video.id);
+      await deleteVideo(video.id);
     }
   }
   
@@ -254,4 +300,23 @@ export async function deleteFolder(id: string): Promise<void> {
   }
   
   await db.delete('folders', id);
+}
+
+export async function deleteAllData(): Promise<void> {
+  const db = await initDB();
+  
+  if (typeof navigator !== 'undefined' && navigator.storage && navigator.storage.getDirectory) {
+    try {
+      const opfsRoot = await navigator.storage.getDirectory();
+      // @ts-ignore
+      for await (const name of opfsRoot.keys()) {
+        await opfsRoot.removeEntry(name);
+      }
+    } catch (err) {
+      console.error('Failed to clear OPFS:', err);
+    }
+  }
+  
+  await db.clear('videos');
+  await db.clear('folders');
 }

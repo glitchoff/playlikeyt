@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Upload, FolderPlus, X } from 'lucide-react';
-import { saveVideo, createFolder, getFolders, updateFolder } from '@/lib/indexeddb';
+import { Upload, FolderPlus, X, Trash2 } from 'lucide-react';
+import { saveVideo, createFolder, getFolders, updateFolder, getTotalStorageUsed, deleteAllData } from '@/lib/indexeddb';
 
 interface VideoUploadProps {
   onUploadComplete?: () => void;
@@ -17,18 +17,23 @@ export default function VideoUpload({ onUploadComplete, selectedFolderId }: Vide
   const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0 });
   const [storageUsed, setStorageUsed] = useState<string>('Calculating...');
 
+  const refreshStorage = () => {
+    getTotalStorageUsed().then(bytes => {
+      if (bytes === 0) {
+        setStorageUsed('0 GB');
+      } else if (bytes < 1024 * 1024) {
+        setStorageUsed(`${(bytes / 1024).toFixed(2)} KB`);
+      } else if (bytes < 1024 * 1024 * 1024) {
+        setStorageUsed(`${(bytes / (1024 * 1024)).toFixed(2)} MB`);
+      } else {
+        setStorageUsed(`${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`);
+      }
+    }).catch(() => setStorageUsed('Unknown'));
+  };
+
   // Load initial storage estimate
   useEffect(() => {
-    if (typeof navigator !== 'undefined' && navigator.storage && navigator.storage.estimate) {
-      navigator.storage.estimate().then(estimate => {
-        if (estimate.usage) {
-          const usedGB = (estimate.usage / (1024 * 1024 * 1024)).toFixed(2);
-          setStorageUsed(`${usedGB} GB`);
-        }
-      }).catch(() => setStorageUsed('Unknown'));
-    } else {
-      setStorageUsed('Unknown');
-    }
+    refreshStorage();
   }, []);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -102,14 +107,7 @@ export default function VideoUpload({ onUploadComplete, selectedFolderId }: Vide
       }
       
       // Update storage after upload
-      if (navigator.storage && navigator.storage.estimate) {
-        navigator.storage.estimate().then(estimate => {
-          if (estimate.usage) {
-            const usedGB = (estimate.usage / (1024 * 1024 * 1024)).toFixed(2);
-            setStorageUsed(`${usedGB} GB`);
-          }
-        });
-      }
+      refreshStorage();
 
       onUploadComplete?.();
     } catch (error) {
@@ -175,6 +173,21 @@ export default function VideoUpload({ onUploadComplete, selectedFolderId }: Vide
     }
   };
 
+  const handleDeleteAll = async () => {
+    if (confirm('🚨 Are you absolutely sure you want to completely WIPE your entire local video library? This will delete all folders and massive OPFS files. This cannot be undone!')) {
+      try {
+        await deleteAllData();
+        refreshStorage();
+        setFolders([]);
+        onUploadComplete?.();
+        alert('Library successfully wiped.');
+      } catch (e) {
+        console.error(e);
+        alert('Error wiping library.');
+      }
+    }
+  };
+
   return (
     <div className="bg-white dark:bg-[#121212] rounded-lg shadow-sm border border-gray-200 dark:border-[#303030] p-6 transition-colors duration-200">
       <div className="space-y-4">
@@ -216,6 +229,16 @@ export default function VideoUpload({ onUploadComplete, selectedFolderId }: Vide
           />
         </div>
 
+        {/* Info Message */}
+        <div className="bg-blue-50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300 p-3.5 rounded-lg text-sm border border-blue-100 dark:border-blue-800/30">
+          <p className="flex items-start gap-2">
+            <span className="text-lg leading-none">ℹ️</span>
+            <span>
+              <strong>Note:</strong> Videos are securely cached in your browser's private storage and will automatically be cleared after <strong>2 days</strong> to save space. Your original physical files on your hard drive are <strong>never</strong> deleted or modified, and you can re-add them at any time!
+            </span>
+          </p>
+        </div>
+
         {/* Folder & Storage Controls */}
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-2">
@@ -237,8 +260,19 @@ export default function VideoUpload({ onUploadComplete, selectedFolderId }: Vide
             </button>
           </div>
           
-          <div className="text-sm text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-[#1a1a1a] px-3 py-1 rounded-full">
-            Storage Used: <span className="font-medium text-gray-700 dark:text-gray-300">{storageUsed}</span>
+          <div className="flex items-center gap-3">
+            <div className="text-sm text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-[#1a1a1a] px-3 py-1.5 rounded-full">
+              Storage Used: <span className="font-medium text-gray-700 dark:text-gray-300">{storageUsed}</span>
+            </div>
+            
+            <button
+              onClick={handleDeleteAll}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/40 rounded-full text-sm font-medium transition-colors"
+              title="Wipe entire library"
+            >
+              <Trash2 className="w-4 h-4" />
+              <span className="hidden sm:inline">Delete All</span>
+            </button>
           </div>
         </div>
 

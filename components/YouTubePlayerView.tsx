@@ -148,6 +148,13 @@ export default function YouTubePlayerView({ video, onVideoSelect, createVideoUrl
               onEnded={handleVideoEnded}
               bookmarks={bookmarks}
               onAddBookmark={handleAddBookmarkClick}
+              startPosition={video.lastPosition}
+              onProgress={(time) => {
+                if (video.id) {
+                  // Save progress to IndexedDB without triggering a full re-render
+                  updateVideo(video.id, { lastPosition: time }).catch(console.error);
+                }
+              }}
             />
           </div>
           
