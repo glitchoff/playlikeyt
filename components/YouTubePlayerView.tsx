@@ -223,28 +223,30 @@ export default function YouTubePlayerView({ video, onVideoSelect, createVideoUrl
 
         {/* Right Sidebar (30%) */}
         <div className="lg:w-[30%] flex-col gap-3 flex">
-          <h3 className="font-bold text-gray-900 dark:text-white text-lg mb-2">Playlist</h3>
-          {recommendedVideos.map((recVideo, index) => (
-            <div 
-              key={recVideo.id} 
-              className={`flex gap-2 cursor-pointer group p-1 rounded-lg transition-colors ${recVideo.id === video.id ? 'bg-gray-200 dark:bg-[#272727]' : 'hover:bg-gray-100 dark:hover:bg-[#3f3f3f]'}`}
-              onClick={() => onVideoSelect(recVideo)}
-            >
-              <div className="flex items-center justify-center w-6 text-xs text-gray-500 dark:text-gray-400 font-medium">
-                {recVideo.id === video.id ? '▶' : index + 1}
+          <h3 className="font-bold text-gray-900 dark:text-white text-lg mb-2 sticky top-0 bg-[#f9f9f9] dark:bg-[#0f0f0f] py-2">Playlist</h3>
+          <div className="flex-1 overflow-y-auto max-h-[calc(100vh-8rem)] scrollbar-hide">
+            {recommendedVideos.map((recVideo, index) => (
+              <div 
+                key={recVideo.id} 
+                className={`flex gap-2 cursor-pointer group p-1 rounded-lg transition-colors ${recVideo.id === video.id ? 'bg-gray-200 dark:bg-[#272727]' : 'hover:bg-gray-100 dark:hover:bg-[#3f3f3f]'}`}
+                onClick={() => onVideoSelect(recVideo)}
+              >
+                <div className="flex items-center justify-center w-6 text-xs text-gray-500 dark:text-gray-400 font-medium">
+                  {recVideo.id === video.id ? '▶' : index + 1}
+                </div>
+                <SidebarThumbnail video={recVideo} />
+                <div className="flex-1 min-w-0 pr-2 flex flex-col justify-center">
+                  <h4 className="text-sm font-semibold text-gray-900 dark:text-white line-clamp-2 mb-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 leading-tight">
+                    {recVideo.name.replace(/\.[^/.]+$/, '')}
+                  </h4>
+                  <p className="text-xs text-gray-600 dark:text-gray-400">Local Video</p>
+                </div>
               </div>
-              <SidebarThumbnail video={recVideo} />
-              <div className="flex-1 min-w-0 pr-2 flex flex-col justify-center">
-                <h4 className="text-sm font-semibold text-gray-900 dark:text-white line-clamp-2 mb-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 leading-tight">
-                  {recVideo.name.replace(/\.[^/.]+$/, '')}
-                </h4>
-                <p className="text-xs text-gray-600 dark:text-gray-400">Local Video</p>
-              </div>
-            </div>
-          ))}
-          {recommendedVideos.length === 0 && (
-            <p className="text-sm text-gray-500 dark:text-gray-400">No other videos found.</p>
-          )}
+            ))}
+            {recommendedVideos.length === 0 && (
+              <p className="text-sm text-gray-500 dark:text-gray-400">No other videos found.</p>
+            )}
+          </div>
         </div>
       </div>
 
